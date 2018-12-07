@@ -38,13 +38,12 @@ func TestGenerateHelmChart(t *testing.T) {
 	if err := template.GenerateHelmChart(); err != nil {
 		t.Errorf("err returned where not expected: %s", err)
 	}
+	defer os.RemoveAll(template.ChartName)
 
 	// TODO test correction of yaml files
 	if _, err := os.Stat(fmt.Sprintf("%s/templates", template.ChartName)); os.IsNotExist(err) {
 		t.Errorf("directories were not created")
 	}
-
-	os.RemoveAll(template.ChartName)
 }
 
 func TestPrintHelmTemplates(t *testing.T) {
@@ -53,11 +52,11 @@ func TestPrintHelmTemplates(t *testing.T) {
 	if err != nil {
 		t.Errorf("err returned where not expected: %s", err)
 	}
+	defer os.RemoveAll(template.ChartName)
 
 	if !strings.Contains(kubernetes, "chart: tester-v0.0.1") {
 		t.Errorf("chart not generated correctly: \n%s", kubernetes)
 	}
-	os.RemoveAll(template.ChartName)
 }
 
 func TestPrintHelmTemplatesValues(t *testing.T) {
@@ -73,6 +72,8 @@ image:
 	if _, err := file.WriteString(values); err != nil {
 		t.Errorf("err creating test value file: %s", err)
 	}
+	defer os.Remove("values.yaml")
+	defer os.RemoveAll(template.ChartName)
 
 	template.Path = ""
 	template.Values = "values.yaml"
@@ -84,7 +85,5 @@ image:
 	if !strings.Contains(kubernetes, `image: "tutum/hello-world:stable"`) {
 		t.Errorf("chart not generated correctly: \n%s", kubernetes)
 	}
-	os.Remove("values.yaml")
-	os.RemoveAll(template.ChartName)
 
 }
