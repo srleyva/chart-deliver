@@ -49,7 +49,7 @@ func (t *Template) GenerateHelmChart() error {
 		switch file {
 		case "values.yaml":
 			f.WriteString(defaultValues)
-		case ".helmIgnore":
+		case ".helmignore":
 			f.WriteString(helmIgnore)
 		}
 		f.Close()
