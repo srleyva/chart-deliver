@@ -15,6 +15,8 @@ type Template struct {
 	Version     string
 	Path        string
 	Values      string
+	Image       string
+	Tag         string
 }
 
 // GenerateMetadata will template the metadata into a helm metadata file
@@ -113,10 +115,42 @@ func (t *Template) PrintHelmTemplate() (string, error) {
 	if t.Values != "" {
 		cmd.Args = append(cmd.Args, "--values", t.Values)
 	}
+	if t.Image != "" {
+		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.repository=%s", t.Image))
+	}
+	if t.Tag != "" {
+		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.tag=%s", t.Tag))
+	}
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
+	return out.String(), nil
+}
+
+// InstallTemplate Actually will install into the k8s cluster
+func (t *Template) InstallTemplate() (string, error) {
+	if t.Path == "" {
+		if err := t.GenerateHelmChart(); err != nil {
+			return "", err
+		}
+	}
+	cmd := exec.Command("helm", "upgrade", "--install", t.ReleaseName, t.ChartName)
+	if t.Values != "" {
+		cmd.Args = append(cmd.Args, "--values", t.Values)
+	}
+	if t.Image != "" {
+		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.repository=%s", t.Image))
+	}
+	if t.Tag != "" {
+		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.tag=%s", t.Tag))
+	}
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return out.String(), err
+	}
+
 	return out.String(), nil
 }

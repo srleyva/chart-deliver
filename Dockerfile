@@ -10,13 +10,12 @@ RUN apk update && apk add make git tree
 RUN mkdir -p $GOPATH/src/github.com/srleyva/chart-deliver
 WORKDIR $GOPATH/src/github.com/srleyva/chart-deliver
 ADD ./ ./
-RUN make && cp chart-generator /chart-generator
-
-ARG chart_cmd=print
+RUN make && cp chart /chart
 
 # Inject Binary into container
-FROM scratch
-COPY --from=helm /etc/ssl/certs /etc/ssl/certs
+FROM google/cloud-sdk:alpine
+RUN gcloud components install kubectl
 COPY --from=helm /linux-amd64/helm /bin/helm
-COPY --from=build /chart-generator /bin/chart-generator
-CMD ["chart-generator"]
+COPY --from=build /chart /bin/chart
+ADD cue-execute /usr/local/bin
+ENTRYPOINT ["cue-execute"]

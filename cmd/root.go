@@ -28,7 +28,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "chart-deliver",
+	Use:   "chart",
 	Short: "Helm Chart Dynamic Generation",
 	Long: `This is designed to be used as a stage of a pipeline.
 The idea being that a project can provide a values.yaml
@@ -58,9 +58,14 @@ func init() {
 	rootCmd.PersistentFlags().StringP("name", "n", "", "The name of the generated helm chart")
 	rootCmd.PersistentFlags().StringP("version", "v", "v0.0.1", "The version of the generated helm chart")
 	rootCmd.PersistentFlags().StringP("values", "f", "", "The path to the file containing your values")
+	rootCmd.PersistentFlags().StringP("image", "c", "", "The path to the file containing your values")
+	rootCmd.PersistentFlags().StringP("tag", "t", "", "The path to the file containing your values")
+
 	viper.BindPFlag("name", rootCmd.PersistentFlags().Lookup("name"))
 	viper.BindPFlag("release", rootCmd.PersistentFlags().Lookup("release"))
 	viper.BindPFlag("values", rootCmd.PersistentFlags().Lookup("values"))
+	viper.BindPFlag("image", rootCmd.PersistentFlags().Lookup("image"))
+	viper.BindPFlag("tag", rootCmd.PersistentFlags().Lookup("tag"))
 }
 
 // initConfig reads in config file and ENV variables if set.
