@@ -2,13 +2,44 @@ package helpers_test
 
 import (
 	"fmt"
-	. "github.com/srleyva/chart-deliver/pkg/helpers"
 	"os"
+	"os/exec"
+	"reflect"
 	"strings"
 	"testing"
+
+	. "github.com/srleyva/chart-deliver/pkg/helpers"
 )
 
+// MockRunner is designed to test that helm is called as expected
+type MockRunner struct {
+	cmd  string
+	args []string
+}
+
+func (r *MockRunner) Run(command string, args ...string) ([]byte, error) {
+	r.cmd = command
+	r.args = args
+	cs := []string{"-test.run=TestHelperProcess", "--"}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	out, err := cmd.CombinedOutput()
+	return out, err
+}
+
+func TestHelperProcess(*testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+	defer os.Exit(0)
+	fmt.Println("testing helper process")
+}
+
+var mockRunner *MockRunner = &MockRunner{}
+
 var template Template = Template{
+	Runner:      mockRunner,
 	ReleaseName: "test",
 	ChartName:   "tester",
 	Version:     "v0.0.1",
@@ -46,44 +77,112 @@ func TestGenerateHelmChart(t *testing.T) {
 	}
 }
 
-func TestPrintHelmTemplates(t *testing.T) {
-	template.Path = ""
-	kubernetes, err := template.PrintHelmTemplate()
-	if err != nil {
-		t.Errorf("err returned where not expected: %s", err)
-	}
+func TestPrintTemplate(t *testing.T) {
 	defer os.RemoveAll(template.ChartName)
 
-	if !strings.Contains(kubernetes, "chart: tester-v0.0.1") {
-		t.Errorf("chart not generated correctly: \n%s", kubernetes)
-	}
+	t.Run("test print with no values file passed", func(t *testing.T) {
+		template.Path = ""
+		_, err := template.PrintHelmTemplate()
+		if err != nil {
+			t.Errorf("err returned where not expected: %s", err)
+		}
+
+		expectedArgs := []string{"template", "tester"}
+
+		if mockRunner.cmd != "helm" {
+			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
+		}
+
+		if !reflect.DeepEqual(expectedArgs, mockRunner.args) {
+			t.Errorf("wrong args passed: \n Expected: %s\n Actual: %s\n", expectedArgs, mockRunner.args)
+		}
+	})
+
+	t.Run("test print with values passed", func(t *testing.T) {
+		template.Path = ""
+		template.Values = "values.yaml"
+		_, err := template.PrintHelmTemplate()
+		if err != nil {
+			t.Errorf("err returned where not expected: %s", err)
+		}
+
+		expectedArgs := []string{"template", "tester", "--values", "values.yaml"}
+
+		if mockRunner.cmd != "helm" {
+			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
+		}
+
+		if !reflect.DeepEqual(expectedArgs, mockRunner.args) {
+			t.Errorf("wrong args passed: \n Expected: %s\n Actual: %s\n", expectedArgs, mockRunner.args)
+		}
+	})
+
+	t.Run("test print with image and tag passed", func(t *testing.T) {
+		template.Path = ""
+		template.Values = ""
+		template.Image = "tutum/hello-world"
+		template.Tag = "latest"
+		_, err := template.PrintHelmTemplate()
+		if err != nil {
+			t.Errorf("err returned where not expected: %s", err)
+		}
+
+		expectedArgs := []string{
+			"template",
+			"tester",
+			"--set",
+			"image.repository=tutum/hello-world",
+			"--set",
+			"image.tag=latest"}
+
+		if mockRunner.cmd != "helm" {
+			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
+		}
+
+		if !reflect.DeepEqual(expectedArgs, mockRunner.args) {
+			t.Errorf("wrong args passed: \n Expected: %s\n Actual: %s\n", expectedArgs, mockRunner.args)
+		}
+		template.Tag = ""
+		template.Image = ""
+	})
 }
 
-func TestPrintHelmTemplatesValues(t *testing.T) {
-	values := `
-image:
-  repository: tutum/hello-world
-`
-	file, err := os.Create("values.yaml")
-	if err != nil {
-		t.Errorf("err creating test value file: %s", err)
-	}
-	defer file.Close()
-	if _, err := file.WriteString(values); err != nil {
-		t.Errorf("err creating test value file: %s", err)
-	}
-	defer os.Remove("values.yaml")
-	defer os.RemoveAll(template.ChartName)
+func TestInstallTemplate(t *testing.T) {
+	t.Run("test install with no values file", func(t *testing.T) {
+		template.Path = ""
+		template.Values = ""
+		_, err := template.InstallTemplate()
+		if err != nil {
+			t.Errorf("err returned where not expected: %s", err)
+		}
 
-	template.Path = ""
-	template.Values = "values.yaml"
-	kubernetes, err := template.PrintHelmTemplate()
-	if err != nil {
-		t.Errorf("err returned where not expected: %s", err)
-	}
+		expectedArgs := []string{"upgrade", "--install", "test", "tester"}
 
-	if !strings.Contains(kubernetes, `image: "tutum/hello-world:stable"`) {
-		t.Errorf("chart not generated correctly: \n%s", kubernetes)
-	}
+		if mockRunner.cmd != "helm" {
+			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
+		}
 
+		if !reflect.DeepEqual(expectedArgs, mockRunner.args) {
+			t.Errorf("wrong args passed: \n Expected: %s\n Actual: %s\n", expectedArgs, mockRunner.args)
+		}
+	})
+
+	t.Run("test install with a values file", func(t *testing.T) {
+		template.Path = ""
+		template.Values = "values.yaml"
+		_, err := template.InstallTemplate()
+		if err != nil {
+			t.Errorf("err returned where not expected: %s", err)
+		}
+
+		expectedArgs := []string{"upgrade", "--install", "test", "tester", "--values", "values.yaml"}
+
+		if mockRunner.cmd != "helm" {
+			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
+		}
+
+		if !reflect.DeepEqual(expectedArgs, mockRunner.args) {
+			t.Errorf("wrong args passed: \n Expected: %s\n Actual: %s\n", expectedArgs, mockRunner.args)
+		}
+	})
 }

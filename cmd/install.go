@@ -28,7 +28,9 @@ var installCmd = &cobra.Command{
 	Short: "Install the generated helm chart into your cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		fflags := cmd.Flags()
+		runner := helpers.NewHelmHandler()
 		meta := helpers.Template{
+			Runner:      runner,
 			ChartName:   fflags.Lookup("name").Value.String(),
 			ReleaseName: fflags.Lookup("release").Value.String(),
 			Version:     fflags.Lookup("version").Value.String(),

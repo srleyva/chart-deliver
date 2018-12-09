@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"text/template"
 )
 
 // Template represent the structure to be templated into metadata for helm
 type Template struct {
+	Runner      Runner
 	ReleaseName string
 	ChartName   string
 	Version     string
@@ -111,22 +111,10 @@ func (t *Template) PrintHelmTemplate() (string, error) {
 			return "", err
 		}
 	}
-	cmd := exec.Command("helm", "template", t.ChartName)
-	if t.Values != "" {
-		cmd.Args = append(cmd.Args, "--values", t.Values)
-	}
-	if t.Image != "" {
-		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.repository=%s", t.Image))
-	}
-	if t.Tag != "" {
-		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.tag=%s", t.Tag))
-	}
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-	return out.String(), nil
+	args := []string{"template", t.ChartName}
+	args = t.buildArgs(args)
+	out, err := t.Runner.Run("helm", args...)
+	return string(out), err
 }
 
 // InstallTemplate Actually will install into the k8s cluster
@@ -136,21 +124,21 @@ func (t *Template) InstallTemplate() (string, error) {
 			return "", err
 		}
 	}
-	cmd := exec.Command("helm", "upgrade", "--install", t.ReleaseName, t.ChartName)
+	args := []string{"upgrade", "--install", t.ReleaseName, t.ChartName}
+	args = t.buildArgs(args)
+	out, err := t.Runner.Run("helm", args...)
+	return string(out), err
+}
+
+func (t *Template) buildArgs(args []string) []string {
 	if t.Values != "" {
-		cmd.Args = append(cmd.Args, "--values", t.Values)
+		args = append(args, "--values", t.Values)
 	}
 	if t.Image != "" {
-		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.repository=%s", t.Image))
+		args = append(args, "--set", fmt.Sprintf("image.repository=%s", t.Image))
 	}
 	if t.Tag != "" {
-		cmd.Args = append(cmd.Args, "--set", fmt.Sprintf("image.tag=%s", t.Tag))
+		args = append(args, "--set", fmt.Sprintf("image.tag=%s", t.Tag))
 	}
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	if err := cmd.Run(); err != nil {
-		return out.String(), err
-	}
-
-	return out.String(), nil
+	return args
 }
