@@ -19,7 +19,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/srleyva/chart-deliver/pkg/helpers"
 )
 
 // printCmd represents the print command
@@ -33,15 +32,6 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fflags := cmd.Flags()
-		runner := helpers.NewHelmHandler()
-		meta := helpers.Template{
-			Runner:      runner,
-			ChartName:   fflags.Lookup("name").Value.String(),
-			ReleaseName: fflags.Lookup("release").Value.String(),
-			Version:     fflags.Lookup("version").Value.String(),
-			Values:      fflags.Lookup("values").Value.String(),
-		}
 
 		log.Infof("Generating helm chart: %s", meta.ChartName)
 		log.Infof("ReleaseName: %s", meta.ReleaseName)

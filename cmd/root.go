@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/srleyva/chart-deliver/pkg/helpers"
+
 	homedir "github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -25,6 +27,8 @@ import (
 )
 
 var cfgFile string
+
+var meta helpers.Template
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -36,6 +40,18 @@ file and a chart will be dynamically generated and deployed`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Flags().Lookup("name").Value.String() == "" || cmd.Flags().Lookup("release").Value.String() == "" {
 			return fmt.Errorf("supply name and release name")
+		}
+		fflags := cmd.Flags()
+		runner := helpers.NewHelmHandler()
+		meta = helpers.Template{
+			Runner:      runner,
+			ChartName:   fflags.Lookup("name").Value.String(),
+			ReleaseName: fflags.Lookup("release").Value.String(),
+			Version:     fflags.Lookup("version").Value.String(),
+			Values:      fflags.Lookup("values").Value.String(),
+			Image:       fflags.Lookup("image").Value.String(),
+			Tag:         fflags.Lookup("tag").Value.String(),
+			Namespace:   fflags.Lookup("namespace").Value.String(),
 		}
 		return nil
 	},
