@@ -74,14 +74,16 @@ func init() {
 	rootCmd.PersistentFlags().StringP("name", "n", "", "The name of the generated helm chart")
 	rootCmd.PersistentFlags().StringP("version", "v", "v0.0.1", "The version of the generated helm chart")
 	rootCmd.PersistentFlags().StringP("values", "f", "", "The path to the file containing your values")
-	rootCmd.PersistentFlags().StringP("image", "c", "", "The path to the file containing your values")
-	rootCmd.PersistentFlags().StringP("tag", "t", "", "The path to the file containing your values")
+	rootCmd.PersistentFlags().StringP("image", "c", "tutum/helloworld", "The repo path of the docker image")
+	rootCmd.PersistentFlags().StringP("tag", "t", "latest", "The tag of the docker container.")
+	rootCmd.PersistentFlags().StringP("namespace", "s", "default", "The namespace that the application will be deployed to.")
 
 	viper.BindPFlag("name", rootCmd.PersistentFlags().Lookup("name"))
 	viper.BindPFlag("release", rootCmd.PersistentFlags().Lookup("release"))
 	viper.BindPFlag("values", rootCmd.PersistentFlags().Lookup("values"))
 	viper.BindPFlag("image", rootCmd.PersistentFlags().Lookup("image"))
 	viper.BindPFlag("tag", rootCmd.PersistentFlags().Lookup("tag"))
+	viper.BindPFlag("namespace", rootCmd.PersistentFlags().Lookup("namespace"))
 }
 
 // initConfig reads in config file and ENV variables if set.

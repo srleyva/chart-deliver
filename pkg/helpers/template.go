@@ -17,6 +17,7 @@ type Template struct {
 	Values      string
 	Image       string
 	Tag         string
+	Namespace   string
 }
 
 // GenerateMetadata will template the metadata into a helm metadata file
@@ -124,7 +125,7 @@ func (t *Template) InstallTemplate() (string, error) {
 			return "", err
 		}
 	}
-	args := []string{"upgrade", "--install", t.ReleaseName, t.ChartName}
+	args := []string{"upgrade", "--install", "--namespace", t.Namespace, t.ReleaseName, t.ChartName}
 	args = t.buildArgs(args)
 	out, err := t.Runner.Run("helm", args...)
 	return string(out), err

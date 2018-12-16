@@ -43,6 +43,7 @@ var template Template = Template{
 	ReleaseName: "test",
 	ChartName:   "tester",
 	Version:     "v0.0.1",
+	Namespace:   "test",
 }
 
 func TestGenerateMetadata(t *testing.T) {
@@ -156,7 +157,7 @@ func TestInstallTemplate(t *testing.T) {
 			t.Errorf("err returned where not expected: %s", err)
 		}
 
-		expectedArgs := []string{"upgrade", "--install", "test", "tester"}
+		expectedArgs := []string{"upgrade", "--install", "--namespace", "test", "test", "tester"}
 
 		if mockRunner.cmd != "helm" {
 			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
@@ -175,7 +176,7 @@ func TestInstallTemplate(t *testing.T) {
 			t.Errorf("err returned where not expected: %s", err)
 		}
 
-		expectedArgs := []string{"upgrade", "--install", "test", "tester", "--values", "values.yaml"}
+		expectedArgs := []string{"upgrade", "--install", "--namespace", "test", "test", "tester", "--values", "values.yaml"}
 
 		if mockRunner.cmd != "helm" {
 			t.Errorf("Expected Call: helm \n Actual Call: %s", mockRunner.cmd)
