@@ -18,6 +18,7 @@ type Template struct {
 	Image       string
 	Tag         string
 	Namespace   string
+	Repo        string
 }
 
 // GenerateMetadata will template the metadata into a helm metadata file
@@ -38,54 +39,28 @@ func (t *Template) GenerateHelmChart() error {
 		return err
 	}
 
-	chartFiles := []string{"values.yaml", ".helmignore"}
-	templateFiles := []string{"NOTES.txt", "_helpers.tpl", "deployment.yaml", "ingress.yaml", "service.yaml"}
-
-	// TODO make DRY...lots of duplicate logic
-	for _, file := range chartFiles {
-		filePath := fmt.Sprintf("%s/%s", t.ChartName, file)
-		f, err := os.Create(filePath)
+	files := defaults
+	if t.Repo != "" {
+		repo, err := NewRepo("gcs", "test", "repo")
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		switch file {
-		case "values.yaml":
-			f.WriteString(defaultValues)
-		case ".helmignore":
-			f.WriteString(helmIgnore)
+		files, err = repo.GetFiles()
+		if err != nil {
+			return err
 		}
-		f.Close()
+
 	}
 
-	for _, file := range templateFiles {
-		filePath := fmt.Sprintf("%s/%s", t.Path, file)
+	for fileName, fileValue := range files {
+		filePath := fmt.Sprintf("%s/%s", t.ChartName, fileName)
 		f, err := os.Create(filePath)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		switch file {
-		case "NOTES.txt":
-			if _, err := f.WriteString(defaultNotes); err != nil {
-				return err
-			}
-		case "_helpers.tpl":
-			if _, err := f.WriteString(defaultHelpers); err != nil {
-				return err
-			}
-		case "deployment.yaml":
-			if _, err := f.WriteString(defaultDeployment); err != nil {
-				return err
-			}
-		case "ingress.yaml":
-			if _, err := f.WriteString(defaultIngress); err != nil {
-				return err
-			}
-		case "service.yaml":
-			if _, err := f.WriteString(defaultService); err != nil {
-				return err
-			}
+		if _, err := f.WriteString(fileValue); err != nil {
+			return err
 		}
 		f.Close()
 	}

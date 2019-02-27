@@ -17,5 +17,5 @@ FROM sleyva97/base-layer:0.0.1
 RUN gcloud components install kubectl
 COPY --from=helm /linux-amd64/helm /bin/helm
 COPY --from=build /chart /bin/chart
-ADD cue-execute /usr/local/bin
+ADD execute /usr/local/bin
 ENTRYPOINT ["cue-execute"]

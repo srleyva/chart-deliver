@@ -1,6 +1,15 @@
 package helpers
 
 // These are all the default values and can be overridden thorugh the CLI
+var defaults = map[string]string{
+	"values.yaml":               defaultValues,
+	".helmignore":               helmIgnore,
+	"templates/NOTES.txt":       defaultNotes,
+	"templates/_helpers.tpl":    defaultHelpers,
+	"templates/deployment.yaml": defaultDeployment,
+	"templates/ingress.yaml":    defaultIngress,
+	"templates/service.yaml":    defaultService,
+}
 
 const metadata = `
 apiVersion: v1

@@ -73,7 +73,7 @@ func TestGenerateHelmChart(t *testing.T) {
 	defer os.RemoveAll(template.ChartName)
 
 	// TODO test correction of yaml files
-	if _, err := os.Stat(fmt.Sprintf("%s/templates", template.ChartName)); os.IsNotExist(err) {
+	if _, err := os.Stat(fmt.Sprintf("%s", template.ChartName)); os.IsNotExist(err) {
 		t.Errorf("directories were not created")
 	}
 }

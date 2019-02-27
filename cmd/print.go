@@ -40,7 +40,11 @@ to quickly create a Cobra application.`,
 		}
 		log.Info("Chart Successfully Generated")
 		log.Info("Printing Kubernetes spec")
-		fmt.Print(meta.PrintHelmTemplate())
+		out, err := meta.PrintHelmTemplate()
+		if err != nil {
+			log.Fatalf("err printing: %s \n %s", out, err)
+		}
+		fmt.Print(out)
 	},
 }
 
