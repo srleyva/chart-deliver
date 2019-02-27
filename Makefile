@@ -16,6 +16,7 @@ format:
 test:
 	go test `go list ./pkg/...`
 	go test `go list ./cmd/...`
+	rm -rf pkg/helpers/tester/
 
 build:
 	$(gobuild)
