@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/srleyva/chart-deliver/pkg/helpers"
 
@@ -42,11 +43,15 @@ file and a chart will be dynamically generated and deployed`,
 			return fmt.Errorf("supply name and release name")
 		}
 		fflags := cmd.Flags()
+		releaseName := strings.ReplaceAll(
+			fflags.Lookup("release").Value.String(),
+			"_",
+			"-")
 		runner := helpers.NewHelmHandler()
 		meta = helpers.Template{
 			Runner:      runner,
 			ChartName:   fflags.Lookup("name").Value.String(),
-			ReleaseName: fflags.Lookup("release").Value.String(),
+			ReleaseName: releaseName,
 			Version:     fflags.Lookup("version").Value.String(),
 			Values:      fflags.Lookup("values").Value.String(),
 			Image:       fflags.Lookup("image").Value.String(),
