@@ -5,7 +5,7 @@ RUN curl -o helm.tar.gz https://storage.googleapis.com/kubernetes-helm/helm-v2.1
 	tar -xvf helm.tar.gz
 
 # Build Binary
-FROM golang:alpine as build
+FROM golang:1.12-alpine as build
 RUN apk update && apk add make git tree
 RUN mkdir -p $GOPATH/src/github.com/srleyva/chart-deliver
 WORKDIR $GOPATH/src/github.com/srleyva/chart-deliver
